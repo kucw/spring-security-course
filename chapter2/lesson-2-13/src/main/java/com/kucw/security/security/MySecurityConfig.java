@@ -26,8 +26,7 @@ public class MySecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().denyAll()
             .and().formLogin()
             .and().httpBasic()
-            .and().csrf().disable()
-            .build();
+            .and().csrf().disable();
     }
 
     // InMemory 創建 User 的用法
