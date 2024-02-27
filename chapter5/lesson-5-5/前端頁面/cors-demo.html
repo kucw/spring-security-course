@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+  <head></head>
+
+  <body>
+    <h3>這是前端開發的 demo 頁面</h3>
+
+    <p>API 返回結果為：</p>
+    <p id="output"></p>
+  </body>
+  
+  <script>
+    // 指定 http method 和 url
+    const method = "GET";
+    const url = "http://localhost:222/hello";
+
+    // 前端發出 http request 請求
+    const http = new XMLHttpRequest();
+    http.open(method, url);
+
+    // http.setRequestHeader("Authorization", "Basic dGVzdDE6MTEx")
+    // http.withCredentials = true;
+
+    http.send();
+    http.onreadystatechange = (e) => {
+      if (http.status === 200) {
+        document.getElementById("output").innerHTML = http.responseText;
+        document.getElementById("output").style.backgroundColor = "#18C5A6";
+      } else {
+        document.getElementById("output").innerHTML = "請求失敗";
+        document.getElementById("output").style.backgroundColor = "#FD3C3C";
+      }
+    }
+  </script>
+
+</html>
