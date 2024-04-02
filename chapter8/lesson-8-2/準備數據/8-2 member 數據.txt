@@ -1,0 +1,11 @@
+-- 儲存會員的數據
+CREATE TABLE member
+(
+    member_id INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    email     VARCHAR(256) NOT NULL UNIQUE KEY,
+    password  VARCHAR(256) NOT NULL,
+    name      VARCHAR(256) NOT NULL,
+    age       INT          NOT NULL
+);
+
+INSERT INTO member(email, password, name, age) VALUES ('test1@gmail.com', '111', 'Test 1', '20');
