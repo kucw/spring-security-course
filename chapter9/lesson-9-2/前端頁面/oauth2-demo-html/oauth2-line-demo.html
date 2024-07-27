@@ -1,0 +1,263 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  </head>
+
+  <body>
+    <h2 class="title">
+      這是 OAuth 2.0 串接 <span><i class="fa-brands fa-line"></i> LINE</span> 的 demo 頁面<a href="../">  （回首頁）</a>
+    </h2>
+    <hr>
+
+    <h3>前置步驟：在 LINE 中註冊一個 OAuth 2.0 的 Client</h3>
+    <p>LINE 的開發者頁面：<a href="https://developers.line.biz/console/" target="_blank">https://developers.line.biz/console/</a></p>
+    <br/><hr>
+
+
+    <h3>1. 從後端取得拼接好的 auth url，使用者點擊此 url，就可以開始連結 LINE 帳號（即是開始 OAuth 2.0 的授權流程）（<a href="https://developers.line.biz/en/docs/line-login/integrate-line-login/" target="_blank">LINE 的 OAuth 2.0 串接文件</a>、<a href="https://developers.line.biz/en/docs/line-login/integrate-line-login/#scopes" target="_blank">Scope 文件</a>）</h3>
+    <div class="connect-button">
+      <i class="fa-brands fa-line"></i> 連結 LINE 帳號
+    </div>
+
+    <form id="buildAuthUrlForm" action="#" spellcheck="false">
+      <div>
+        <button type="submit">取得 auth url，call GET http://localhost:8080/line/buildAuthUrl</button>
+      </div>
+    </form>
+    <div>
+      <p>返回結果：</p>
+      <a id="buildAuthUrlForm-a" class="show-url" href="#"></a>
+    </div>
+    <br/><br/>
+
+    <h3>2. 將 url 中返回的 code 傳遞給後端，由後端去完成 LINE 帳號連結（即是完成 OAuth 2.0 的授權流程），並取得 access_token（<a href="https://jwt.io/" target="_blank">JWT 解析工具</a>）</h3>
+    <form id="exchangeTokenForm" action="#" spellcheck="false">
+      <div>
+        <label style="vertical-align: top;">code 的值：</label>
+        <textarea id="code" name="code" rows="2" cols="60" type="text"></textarea>
+      </div>
+      <div>
+        <button type="submit">提交，call POST http://localhost:8080/line/exchangeToken</button>
+      </div>
+    </form>
+    <div>
+      <p>返回結果：</p>
+      <p id="exchangeTokenForm-outputStatus"></p>
+      <p id="exchangeTokenForm-output" class="output-json">.</p>
+    </div>
+    <br/><br/>
+    
+    <h3>3. 使用 access_token 請求，取得使用者在 LINE 中的數據</h3>
+    <div class="api-form">
+      <form id="getLineUserForm" action="#" spellcheck="false">
+        <p style="font-weight: 700">1. 取得使用者的資訊（GET https://api.line.me/v2/profile）<a href="https://developers.line.biz/en/reference/line-login/#get-user-profile" target="_blank">API 文件</a></p>
+        <div>
+          <label style="vertical-align: top;">access token 的值：</label>
+          <textarea id="getLineUserForm-accessToken" rows="6" cols="60" type="text"></textarea>
+        </div>
+        <button type="submit">提交，call GET https://api.line.me/v2/profile</button>
+      </form>
+      <div>
+        <p>返回結果：</p>
+        <p id="getLineUserForm-outputStatus"></p>
+        <p id="getLineUserForm-output" class="output-json">.</p>
+      </div>
+    </div>
+    <br/><br/>
+
+    <h3>4. 由「後端程式」使用 refresh_token，去和 LINE 換發一個新的 access_token</h3>
+    <p>PS: 一般來說會將 refresh_token 儲存在後端的資料庫裡面，由後端直接去和 LINE 溝通，不需要前端介入</p>
+    <br/>
+    <form id="refreshTokenForm" action="#" spellcheck="false">
+      <div>
+        <label style="vertical-align: top;">refresh_token 的值：</label>
+        <textarea id="refreshToken" name="refreshToken" rows="2" cols="60" type="text"></textarea>
+      </div>
+      <div>
+        <button type="submit">提交，call POST http://localhost:8080/line/refreshToken</button>
+      </div>
+    </form>
+    <div>
+      <p>返回結果：</p>
+      <p id="refreshTokenForm-outputStatus"></p>
+      <p id="refreshTokenForm-output" class="output-json">.</p>
+    </div>
+    <br/><br/>
+
+    <h3>補充資料</h3>
+    <ul>
+      <li>在 LINE 中註冊一個 OAuth 2.0 的第三方服務：<a href="https://developers.line.biz/console/" target="_blank">https://developers.line.biz/console/</a></li>
+      <li>LINE 的 OAuth 2.0 串接文件：<a href="https://developers.line.biz/en/docs/line-login/integrate-line-login/" target="_blank">https://developers.line.biz/en/docs/line-login/integrate-line-login/</a></li>
+      <li>LINE 中可授權的 Scope 選項：<a href="https://developers.line.biz/en/docs/line-login/integrate-line-login/#scopes" target="_blank">https://developers.line.biz/en/docs/line-login/integrate-line-login/#scopes</a></li>
+      <li>管理自己使用 LINE 授權的第三方服務：需要使用手機操作（進到 LINE -> 點選設定 -> 我的帳號 -> 連動中的應用程式）</li>
+      <li>JWT 解析工具：<a href="https://jwt.io/" target="_blank">https://jwt.io/</a></li>
+    </ul>
+  </body>
+  
+  <script>
+    document.getElementById("buildAuthUrlForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+    
+      // 指定 http method、url
+      const http = new XMLHttpRequest();
+      const method = "GET";
+      const url = "http://localhost:8080/line/buildAuthUrl";
+      http.open(method, url);
+
+      // 發出 http request 請求
+      http.send();
+
+      http.onreadystatechange = (e) => {
+        var a = document.getElementById("buildAuthUrlForm-a");
+        a.setAttribute("href", http.responseText);
+      }
+    });
+
+    document.getElementById("exchangeTokenForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+    
+      // 指定 http method、url
+      const http = new XMLHttpRequest();
+      const method = "POST";
+      const url = "http://localhost:8080/line/exchangeToken";
+      http.open(method, url);
+
+      // 添加 request body 中的參數
+      var data = {
+        "code": document.getElementById("code").value
+      }
+
+      // 發出 http request 請求
+      http.setRequestHeader("Content-Type", "application/json");
+      http.send(JSON.stringify(data));
+
+      http.onreadystatechange = (e) => {
+        var outputStatus = document.getElementById("exchangeTokenForm-outputStatus");
+        var output = document.getElementById("exchangeTokenForm-output");
+        showOutput(http, outputStatus, output);
+      }
+    });
+
+    document.getElementById("getLineUserForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+    
+      // 指定 http method、url
+      const http = new XMLHttpRequest();
+      const method = "GET";
+      const url = "https://api.line.me/v2/profile";
+      http.open(method, url);
+
+      // 添加 acces token 的值在 Authorization header 中
+      const accessToken = document.getElementById("getLineUserForm-accessToken").value;
+      http.setRequestHeader("Authorization", "Bearer " + accessToken);
+
+      // 發出 http request 請求
+      http.send();
+
+      http.onreadystatechange = (e) => {
+        var outputStatus = document.getElementById("getLineUserForm-outputStatus");
+        var output = document.getElementById("getLineUserForm-output");
+        showOutput(http, outputStatus, output);
+      }
+    });
+
+    document.getElementById("refreshTokenForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+    
+      // 指定 http method、url
+      const http = new XMLHttpRequest();
+      const method = "POST";
+      const url = "http://localhost:8080/line/refreshToken";
+      http.open(method, url);
+
+      // 添加 request body 中的參數
+      var data = {
+        "refreshToken": document.getElementById("refreshToken").value
+      }
+
+      // 發出 http request 請求
+      http.setRequestHeader("Content-Type", "application/json");
+      http.send(JSON.stringify(data));
+
+      http.onreadystatechange = (e) => {
+        var outputStatus = document.getElementById("refreshTokenForm-outputStatus");
+        var output = document.getElementById("refreshTokenForm-output");
+        showOutput(http, outputStatus, output);
+      }
+    });
+
+    function showOutput(http, outputStatus, output) {
+      outputStatus.style.backgroundColor = "#D0D0D0";
+      outputStatus.innerHTML = http.status;
+      
+      output.style.backgroundColor = "#D0D0D0";
+      try {
+        output.innerHTML = JSON.stringify(JSON.parse(http.responseText), null, 4); 
+      } catch (e) {
+        output.innerHTML = http.responseText;
+      }
+    }
+
+  </script>
+
+  <style>
+    .title a {
+      font-size: 18px;
+      text-decoration: none;
+    }
+
+    .title span {
+      background-color: #06C755;
+      color: #FFFFFF;
+      border-radius: 5px;
+      padding: 1px 8px 1px 8px;
+    }
+
+    .connect-button {
+      background-color: #06C755;
+      color: #FFFFFF;
+      width: fit-content;
+      border-radius: 5px;
+      padding: 3px 8px 3px 8px;
+      margin: 0 0 20px 0;
+    }
+
+    .api-form {
+      display: inline-block;
+      padding: 0 20px 0 20px;
+      margin: 0 0 20px 0;
+      border: 1px solid #000000;
+
+      button {
+        display: block;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+      }
+    }
+
+    .output-json {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    a.show-url {
+      &::after {
+        content: attr(href);
+      }
+    }
+
+    ul {
+      padding-inline-start: 20px;
+    }
+
+    li {
+        padding: 5px 0 5px 0;
+    }
+
+    body {
+      margin: 0 20px 50px 20px;
+    }
+  </style>
+
+</html>
